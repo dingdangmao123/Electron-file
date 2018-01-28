@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+  <meta charset="UTF-8">
+  <title>Electron-file</title>
+</head>
+
+<body>
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12">
+        <h1 class="text-info">文件管理系统</h1>
+        <p class="text-info" id="info"><span>当前路径: </span><span id="path"></span>
+        </p>
+        <div id="msg">
+        </div>
+      </div>
+      <div class="col-md-12">
+        <div class="row">
+          <div class="col-md-12">
+            <div class="input-group">
+              <span class="input-group-btn">
+              <button id="back" class="btn btn-info" type="button">返回</button>
+            </span>
+              <input type="text" id="dir" class="form-control" placeholder="输入文件">
+              <span class="input-group-btn">
+              <button id="search" class="btn btn-info" type="button">搜索</button>
+            </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="col-md-12">
+      <ul id="con" style="margin-top:20px" class="media-list">
+      </ul>
+    </div>
+  </div>
+  </div>
+
+</body>
+<script src="jq.js"></script>
+<script>
+  if (typeof module === 'object') {
+    window.jQuery = window.$ = module.exports;
+  };
+</script>
+<script>
+  var cur = -1;
+  var curdir = "";
+  var dir = [];
+  const ipcRenderer = require('electron').ipcRenderer;
+  $("#search").on("click", function() {
+    try {
+      ipcRenderer.send('synchronous-message', '{"cmd":"list","value":"' + $("#dir").val() + '"}');
+    } catch (e) {
+      alert(e.message)
+      return
+    }
+    curdir = $("#dir").val()
+    dir = []
+    dir.push(curdir)
+    update()
+  });
+
+  $("#back").on("click", function() {
+    if (dir.length == 1) {
+      alert("已经全部返回")
+      return
+    }
+    try {
+      dir.pop()
+      ipcRenderer.send('synchronous-message', '{"cmd":"list","value":"' + dir[dir.length - 1] + '"}');
+    } catch (e) {
+      alert(e.message)
+      return
+    }
+    update()
+  });
+  ipcRenderer.on('synchronous-reply', function(event, arg) {
+    var res = JSON.parse(arg)
+    if (res.reply == "list")
+      list(res.value)
+    else if (res.reply == "delete")
+      del(res.value)
+
+
+    if (res.error != "")
+      tip(true, res.error)
+    else
+      tip(false, res.error)
+  });
+
+  function tip(b, msg) {
+    if (!b) {
+      $("#msg").html("")
+      return
+    }
+    var s = ""
+    for (var i = 0; i < msg.length; i++)
+      s = s + '<p class="text-danger">' + msg[i].info + '</p>'
+
+    $("#msg").html(s)
+  }
+
+  function del(reply) {
+
+    if (reply) {
+      alert("删除成功")
+      $("#con li").eq(cur).remove()
+    } else
+      alert("删除失败")
+    cur = -1;
+  }
+
+  function list(res) {
+    var i = 0
+    var s = ""
+    res.forEach(function(v) {
+      var pic = "icon/file.png"
+      if (v.is)
+        pic = "icon/dir.png"
+      s = s + '<li class="media">' +
+        '<div class="media-left"><img class="media-object" src="' + pic + '">' +
+        '</div><div class="media-body">' +
+        '<p>' + decodeURI(v.file) + '</p></div></li>'
+    })
+
+    $("#con").html(s)
+    bb()
+  }
+
+  function bb() {
+    $("li p").on("click", function() {
+      cur = $("ul p").index(this)
+      ipcRenderer.send('synchronous-message', '{"cmd":"delete","value":"' + curdir + '\\\\' + $(this).text() + '"}');
+    });
+
+    $("li img").on("click", function() {
+      var text = $("ul p").eq($("ul img").index(this)).text()
+      try {
+        ipcRenderer.send('synchronous-message', '{"cmd":"list","value":"' + dir[dir.length - 1] + "\\\\" + text + '"}');
+      } catch (e) {
+        alert(e.message)
+        return
+      }
+      dir.push(dir[dir.length - 1] + "\\\\" + text)
+      update()
+    });
+  }
+
+  function update() {
+    if (dir.length > 0)
+      $("#path").text(dir[dir.length - 1])
+  }
+</script>
+
+</html>
