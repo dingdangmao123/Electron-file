@@ -5,10 +5,10 @@
 
 ## 效果图
 
-!()[https://github.com/dingdangmao123/Electron-file/blob/master/demo/1.png?raw=true]
+![](https://github.com/dingdangmao123/Electron-file/blob/master/demo/1.png)
 
-!()[https://github.com/dingdangmao123/Electron-file/blob/master/demo/2.png?raw=true]
+![](https://github.com/dingdangmao123/Electron-file/blob/master/demo/2.png)
 
-!()[https://github.com/dingdangmao123/Electron-file/blob/master/demo/3.png?raw=true]
+![](https://github.com/dingdangmao123/Electron-file/blob/master/demo/3.png)
 
 
